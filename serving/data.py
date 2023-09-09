@@ -93,9 +93,37 @@ def get_prediction_data(lon, lat, start, end):
     return feature.getInfo()["features"][0]["properties"]
 
 
-def labeled_feature(row):
+def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collection):
+    """
+    Extract labeled features from satellite imagery at a specific point.
 
-    select_point = ee.Geometry.Point([row.Lon, row.Lat])
+    This function extracts labeled features from satellite imagery at a specific point
+    defined by latitude (Lat) and longitude (Lon) provided in the 'row' parameter. The
+    function selects the appropriate image collection (Iran, Sudan, or Afghanistan) based
+    on the point's location and then extracts features from the mosaic of that collection.
+
+    Parameters:
+    - row (pd.Series or dict): A row or dictionary containing 'Lat', 'Lon', and 'Target' fields,
+      where 'Lat' and 'Lon' are the latitude and longitude coordinates of the point, and 'Target'
+      is the label associated with the point.
+    - iran_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Iran.
+    - sudan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Sudan.
+    - afghanistan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Afghanistan.
+
+    Returns:
+    - labeled_feature (ee.Feature): A feature representing the labeled feature extracted from the satellite imagery.
+
+    Note:
+    - To use this function, you must have access to the 'select_collection_by_point' function,
+      'iran_geometry', 'sudan_geometry', 'afghanistan_geometry', 'PATCH_SIZE', and 'SCALE'
+      defined elsewhere in your code.
+
+    Example:
+    row = {'Lat': 35.1234, 'Lon': 51.5678, 'Target': 'urban'}
+    labeled_feature = labeled_feature(row, iran_collection, sudan_collection, afghanistan_collection)
+    # Now you can work with the labeled feature for further analysis or modeling.
+    """
+    select_point = ee.Geometry.Point([row['Lon'], row['Lat']])
 
     selected_collection = select_collection_by_point(
         select_point,
@@ -113,7 +141,7 @@ def labeled_feature(row):
     )
     point = ee.Feature(
         select_point,
-        {LABEL: row.Target},
+        {LABEL: row['Target']},
     )
     return (
         image.neighborhoodToArray(ee.Kernel.square(PATCH_SIZE))
@@ -121,6 +149,44 @@ def labeled_feature(row):
         .first()
     )
 
+
+def get_collections(start_date, end_date):
+    """
+    Retrieve composited Sentinel-2 image collections for specific regions and time frame.
+
+    This function retrieves composited Sentinel-2 image collections for three different regions:
+    Iran, Sudan, and Afghanistan, for a specified time period between 'start_date' and 'end_date'.
+
+    Parameters:
+    - start_date (str): The start date in YYYY-MM-DD format, indicating the beginning of the time frame.
+    - end_date (str): The end date in YYYY-MM-DD format, indicating the end of the time frame.
+
+    Returns:
+    - iran_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Iran.
+    - sudan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Sudan.
+    - afghanistan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Afghanistan.
+    
+    Note:
+    - To use this function, you must have access to the 'create_composited_sentinel2_collection'
+      function and the geometries (iran_geometry, sudan_geometry, and afghanistan_geometry)
+      defined elsewhere in your code.
+
+    Example:
+    start_date = "2023-01-01"
+    end_date = "2023-12-31"
+    iran_collection, sudan_collection, afghanistan_collection = get_collections(start_date, end_date)
+    # Now you can work with these collections for further analysis or visualization.
+    """
+    iran_collection = create_composited_sentinel2_collection(iran_geometry,
+                                                             start_date,
+                                                             end_date)
+    sudan_collection = create_composited_sentinel2_collection(sudan_geometry,
+                                                             start_date,
+                                                             end_date)
+    afghanistan_collection = create_composited_sentinel2_collection(afghanistan_geometry,
+                                                                   start_date,
+                                                                   end_date)
+    return iran_collection, sudan_collection, afghanistan_collection
 
 
 def select_collection_by_point(point, 
@@ -204,7 +270,7 @@ def create_composited_sentinel2_collection(roi,
         interval_end_date_str = interval_end_date.strftime('%Y-%m-%d')
 
         # Filter Sentinel-2 data for the current date range
-        collection = ee.ImageCollection('COPERNICUS/S2') \
+        collection = ee.ImageCollection(IMAGE_COLLECTION) \
             .filterBounds(roi) \
             .filterDate(interval_start_date_str, interval_end_date_str) \
             .select(BANDS) \
@@ -227,7 +293,6 @@ def create_composited_sentinel2_collection(roi,
         start_date = interval_end_date + timedelta(days=1)
 
     return composited_collection
-   
 
 def calculate_ndvi(image):
     """Calculate NDVI for an image."""
