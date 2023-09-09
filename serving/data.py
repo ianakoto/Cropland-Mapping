@@ -96,7 +96,7 @@ def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collecti
     labeled_feature = labeled_feature(row, iran_collection, sudan_collection, afghanistan_collection)
     # Now you can work with the labeled feature for further analysis or modeling.
     """
-    select_point = ee.Geometry.Point([row['Lon'], row['Lat']])
+    select_point = ee.Geometry.Point([row.Lon, row.Lat])
 
     selected_collection = select_collection_by_point(
         select_point,
@@ -114,7 +114,7 @@ def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collecti
     )
     point = ee.Feature(
         select_point,
-        {LABEL: row['Target']},
+        {LABEL: row.Target},
     )
     return (
         image.neighborhoodToArray(ee.Kernel.square(PATCH_SIZE))
