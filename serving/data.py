@@ -48,14 +48,28 @@ afghanistan_geometry = afghanistan_roi.geometry()
 
 
 
-def get_prediction_data(lon, lat, start, end):
+def get_prediction_data(lon, 
+                        lat, 
+                        iran_collection, 
+                        sudan_collection, 
+                        afghanistan_collection):
     """Extracts Sentinel image as json at specific lat/lon and timestamp."""
 
     location = ee.Feature(ee.Geometry.Point([lon, lat]))
+
+    selected_collection = select_collection_by_point(
+        location,
+        iran_geometry,
+        sudan_geometry,
+        afghanistan_geometry,
+        iran_collection,
+        sudan_collection,
+        afghanistan_collection
+    )
+
+
     image = (
-        ee.ImageCollection(IMAGE_COLLECTION)
-        .filterDate(start, end)
-        .select(BANDS)
+        selected_collection
         .mosaic()
     )
 
