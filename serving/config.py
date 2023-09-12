@@ -1,4 +1,4 @@
-LABEL = "is_crop_or_land"
+LABEL = "is_cropland"
 IMAGE_COLLECTION = "COPERNICUS/S2_SR_HARMONIZED"
 BANDS = [
     "B2",
