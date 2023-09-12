@@ -33,22 +33,16 @@ import argparse
 
 import tensorflow as tf
 
+
+IMAGE_COLLECTION = "COPERNICUS/S2_SR_HARMONIZED"
 BANDS = [
-    "B1",
     "B2",
     "B3",
     "B4",
-    "B5",
-    "B6",
-    "B7",
-    "B8",
-    "B8A",
-    "B9",
-    "B10",
-    "B11",
-    "B12",
+    "B8"
 ]
-LABEL = "is_powered_on"
+FEATURES = ["NDVI", "EVI"]
+LABEL = "is_crop_or_land"
 BATCH_SIZE = 64
 
 
