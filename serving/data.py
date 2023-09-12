@@ -9,25 +9,16 @@ import numpy as np
 
 
 LABEL = "is_crop_or_land"
-IMAGE_COLLECTION = "COPERNICUS/S2"
+IMAGE_COLLECTION = "COPERNICUS/S2_SR_HARMONIZED"
 BANDS = [
-    "B1",
     "B2",
     "B3",
     "B4",
-    "B5",
-    "B6",
-    "B7",
-    "B8",
-    "B8A",
-    "B9",
-    "B10",
-    "B11",
-    "B12",
+    "B8"
 ]
 FEATURES = ["NDVI", "EVI"]
 SCALE = 10
-PATCH_SIZE = 16
+PATCH_SIZE =16
 
 
 # For this Project we focus on 3 areas. 
