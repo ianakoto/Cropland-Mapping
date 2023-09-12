@@ -32,18 +32,9 @@ from __future__ import annotations
 import argparse
 
 import tensorflow as tf
+from config import *
 
 
-IMAGE_COLLECTION = "COPERNICUS/S2_SR_HARMONIZED"
-BANDS = [
-    "B2",
-    "B3",
-    "B4",
-    "B8"
-]
-FEATURES = ["NDVI", "EVI"]
-LABEL = "is_crop_or_land"
-BATCH_SIZE = 64
 
 
 def get_args() -> dict:
