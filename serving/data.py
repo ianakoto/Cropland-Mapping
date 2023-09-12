@@ -18,7 +18,7 @@ BANDS = [
 ]
 FEATURES = ["NDVI", "EVI"]
 SCALE = 10
-PATCH_SIZE = 16
+PATCH_SIZE =16
 
 
 # For this Project we focus on 3 areas. 
