@@ -1,28 +1,7 @@
 from datetime import datetime, timedelta
-import io
-
 import ee
 import numpy as np
-
-
-
-
-
-LABEL = "is_crop_or_land"
-IMAGE_COLLECTION = "COPERNICUS/S2_SR_HARMONIZED"
-BANDS = [
-    "B2",
-    "B3",
-    "B4",
-    "B8"
-]
-FEATURES = ["NDVI", "EVI"]
-SCALE = 10
-PATCH_SIZE =16
-
-
-# For this Project we focus on 3 areas. 
-# Change this part if you want to to focus on a different area.
+from config import *
 
 
 countries = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017')
@@ -128,16 +107,12 @@ def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collecti
     )
 
 
-def get_collections(start_date, end_date):
+def get_collections():
     """
     Retrieve composited Sentinel-2 image collections for specific regions and time frame.
 
     This function retrieves composited Sentinel-2 image collections for three different regions:
     Iran, Sudan, and Afghanistan, for a specified time period between 'start_date' and 'end_date'.
-
-    Parameters:
-    - start_date (str): The start date in YYYY-MM-DD format, indicating the beginning of the time frame.
-    - end_date (str): The end date in YYYY-MM-DD format, indicating the end of the time frame.
 
     Returns:
     - iran_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Iran.
@@ -156,14 +131,14 @@ def get_collections(start_date, end_date):
     # Now you can work with these collections for further analysis or visualization.
     """
     iran_collection = create_composited_sentinel2_collection(iran_geometry,
-                                                             start_date,
-                                                             end_date)
+                                                             IRAN_START_DATE,
+                                                             IRAN_END_DATE)
     sudan_collection = create_composited_sentinel2_collection(sudan_geometry,
-                                                             start_date,
-                                                             end_date)
+                                                              SUDAN_START_DATE,
+                                                             SUDAN_END_DATE)
     afghanistan_collection = create_composited_sentinel2_collection(afghanistan_geometry,
-                                                                   start_date,
-                                                                   end_date)
+                                                                   AFGHANISTAN_START_DATE,
+                                                                   AFGHANISTAN_END_DATE)
     return iran_collection, sudan_collection, afghanistan_collection
 
 
@@ -250,10 +225,12 @@ def create_composited_sentinel2_collection(roi,
         # Filter Sentinel-2 data for the current date range
         collection = ee.ImageCollection(IMAGE_COLLECTION) \
             .filterBounds(roi) \
-            .filterDate(interval_start_date_str, interval_end_date_str) \
-            .select(BANDS) \
-            .sort('CLOUDY_PIXEL_PERCENTAGE') \
-            #.limit(limit)
+            .filterDate(interval_start_date_str, interval_end_date_str)
+
+        # Apply the cloud mask function to the image collection
+        collection = collection.map(mask_clouds)
+
+        collection = collection.select(BANDS)
 
         # Calculate NDVI and EVI if requested
         if include_ndvi:
@@ -271,6 +248,16 @@ def create_composited_sentinel2_collection(roi,
         start_date = interval_end_date + timedelta(days=1)
 
     return composited_collection
+
+
+def mask_clouds(image):
+    """
+          Create a function to mask clouds using the Sentinel-2 QA60 band
+    """
+
+    QA60 = image.select(['QA60'])
+    cloud_mask = QA60.bitwiseAnd(1 << 10).eq(0).And(QA60.bitwiseAnd(1 << 11).eq(0))
+    return image.updateMask(cloud_mask)
 
 def calculate_ndvi(image):
     """Calculate NDVI for an image."""
