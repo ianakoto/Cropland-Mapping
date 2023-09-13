@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import ee
 import numpy as np
 from config import *
-
+import time
 
 countries = ee.FeatureCollection("FAO/GAUL/2015/level2")
 
@@ -175,9 +175,8 @@ def export_cropland_samples(image_collection, class_label, region, sample_size, 
 
     # Create an ID property for each feature
     def add_id(feature):
-        return feature.set(
-            "ID", ee.String("ID_").cat(ee.String(ee.Number(feature.id())))
-        )
+        unique_id = int(time.time() * 1000)
+        return feature.set("ID", ee.String("ID_").cat(ee.String(str(unique_id))))
 
     samples_with_id = cropland_samples.map(add_id)
 
