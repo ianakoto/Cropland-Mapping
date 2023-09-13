@@ -119,38 +119,112 @@ def sample_cropland_points(scale=500, sample_size=1000):
 
     """
 
+
     # Load the specified dataset
-    dataset = ee.ImageCollection(DYNAMIC_WORD_ID) \
-        .filterDate(IRAN_START_DATE, IRAN_END_DATE) \
-        .filterBounds(iran_geometry.union(sudan_geometry)) \
-        .select(['crops'])  # Select the 'crops' band
-
-    # Function to sample points randomly
-    def sample_points(feature):
-        crops_integer = feature.select('crops').toInt()
-        sampled_data = crops_integer.stratifiedSample(
-            classBand='crops',  # Specify the band used for stratification
-            scale=scale,
-            numPoints=sample_size,
-            seed=123,  # Set a random seed for reproducibility
-            region=feature.geometry()
-        )
-        return sampled_data
-
-    # Sample cropland points for Iran and Sudan
-    sampled_cropland_iran_sudan = dataset.map(sample_points)
-
-    # Sample cropland points for Afghanistan
-    dataset_afghanistan = ee.ImageCollection(DYNAMIC_WORD_ID) \
-        .filterDate(AFGHANISTAN_START_DATE, AFGHANISTAN_END_DATE) \
-        .filterBounds(afghanistan_geometry) \
-        .select(['crops'])  # Select the 'crops' band
-
-    sampled_cropland_afghanistan = dataset_afghanistan.map(sample_points)
-
-    return sampled_cropland_iran_sudan.flatten(), sampled_cropland_afghanistan.flatten()
+    iran_sudan_dataset = get_training_dataset(MODIS_LANDCOVER_ID,
+                                        IRAN_START_DATE, 
+                                        IRAN_END_DATE,
+                                        "LC_Type1")
+    
+    iran_sampled = export_cropland_samples(iran_sudan_dataset,
+                                            iran_geometry,
+                                            12,
+                                            1000,
+                                            500)
 
 
+    sudan_sampled = export_cropland_samples(iran_sudan_dataset,
+                                            sudan_geometry,
+                                            12,
+                                            1000,
+                                            500)
+
+    
+    afghan_dataset= get_training_dataset(DYNAMIC_WORLD_ID,
+                                        AFGHANISTAN_START_DATE, 
+                                        AFGHANISTAN_END_DATE,
+                                        "crop")
+    
+    afghan_sampled = export_cropland_samples(afghan_dataset,
+                                            afghanistan_geometry,
+                                            4,
+                                            1000,
+                                            500)
+
+
+    return iran_sampled , sudan_sampled, afghan_sampled
+
+
+
+def export_cropland_samples(image_collection,class_label, region, sample_size, scale):
+    """
+    Export cropland samples from an image collection within a specified region.
+
+    Parameters:
+        image_collection (ee.ImageCollection): The Earth Engine ImageCollection to analyze.
+        region (ee.Geometry): The region of interest (ROI) defined as an Earth Engine Geometry.
+        class_label (int):  The class label for the cropland
+        sample_size (int): The number of random sample points to generate.
+        scale (int): The scale (pixel size) for stratified sampling.
+
+    Returns:
+        ee.FeatureCollection: A FeatureCollection containing cropland samples with added ID, Latitude, and Longitude properties.
+    """
+
+    # Create a binary mask where cropland pixels are assigned 1 and others as 0
+    cropland_mask = image_collection.eq(class_label)  # 12 represents cropland in the MODIS dataset, 4 for dynamic world
+
+    # Convert the binary mask to an image with 1s and 0s
+    cropland_image = cropland_mask.rename("Cropland")
+
+    # Clip the image to the specified ROI
+    cropland_image_clipped = cropland_image.clip(region)
+
+    # Create random sample points for cropland (class 1)
+    cropland_samples = cropland_image_clipped.select('Cropland').toInt().stratifiedSample(
+        classBand='Cropland',  # Specify the band used for stratification
+        scale=scale,
+        numPoints=sample_size,
+        region=region,
+        geometries=True
+    )
+
+    # Create an ID property for each feature
+    def add_id(feature):
+        return feature.set("ID", ee.String("ID_").cat(ee.String(ee.Number(feature.id()))))
+
+    samples_with_id = cropland_samples.map(add_id)
+
+    # Split the geometry into latitude and longitude
+    def split_geometry(feature):
+        lat_lon = ee.Geometry(feature.geometry()).coordinates()
+        return feature.setMulti({'Latitude': lat_lon.get(1), 'Longitude': lat_lon.get(0)})
+
+    samples_with_lat_lon = samples_with_id.map(split_geometry)
+
+    return samples_with_lat_lon
+
+
+def get_training_dataset(id, start_date, end_date, band_name):
+    """
+    Retrieve and process an Earth Engine image collection to create a training dataset.
+
+    Parameters:
+        id (str): The Earth Engine image collection ID to retrieve.
+        start_date (str): The start date for filtering the image collection (e.g., "YYYY-MM-DD").
+        end_date (str): The end date for filtering the image collection (e.g., "YYYY-MM-DD").
+        band_name (str): The name of the band to select and process.
+
+    Returns:
+        ee.Image: A processed image representing the maximum value of the specified band
+                   within the specified date range.
+    """
+    # Load the specified image collection, filter by date, and select the specified band
+    dataset = ee.ImageCollection(id) \
+        .filterDate(start_date, end_date) \
+        .select(band_name).max()
+    
+    return dataset
 
 def get_collections():
     """
@@ -232,7 +306,8 @@ def create_composited_sentinel2_collection(roi,
                                            end_date_str, 
                                            interval=15, 
                                            limit=10, 
-                                           include_ndvi=True, 
+                                           include_ndvi=True,
+                                           include_ndwi=True, 
                                            include_evi=True):
     """
     Creates a 15-day composited Sentinel-2 image collection within the specified ROI and time range.
@@ -272,18 +347,20 @@ def create_composited_sentinel2_collection(roi,
             .filterBounds(roi) \
             .filterDate(interval_start_date_str, interval_end_date_str)
 
-        # Apply the cloud mask function to the image collection
-        collection = collection.map(mask_clouds)
-
-        collection = collection.select(BANDS)
+        # Apply the cloud & shadow mask function to the image collection
+        collection = collection.map(mask_clouds_and_shadows)
 
         # Calculate NDVI and EVI if requested
         if include_ndvi:
             collection = collection.map(calculate_ndvi)
+        if include_ndwi:
+            collection = collection.map(calculate_ndwi)
         if include_evi:
             collection = collection.map(calculate_evi)
 
+        collection = collection.select([BANDS] +  [FEATURES])
         # Create a median composite of the image collection
+        collection = collection.map(normalize_sentinel2)
         median_image = collection.median()
 
         # Add the composite to the ImageCollection
@@ -293,6 +370,47 @@ def create_composited_sentinel2_collection(roi,
         start_date = interval_end_date + timedelta(days=1)
 
     return composited_collection
+
+
+
+
+def mask_clouds_and_shadows(image):
+    """
+    Define a function to mask clouds and their shadows.
+    Load the Sentinel-2 Cloud Probability (S2C) product.
+    """
+    s2c = ee.ImageCollection(SENTINEL_CLOUD_PROB_ID) \
+        .filterBounds(image.geometry()) \
+        .filterDate(image.date())
+
+    # Select the cloud probability band.
+    cloud_probability = s2c.first().select('probability')
+
+    # Create a cloud mask by thresholding the cloud probability.
+    cloud_mask = cloud_probability.lt(CLOUD_THRESHOLD)
+
+    # Create a shadow mask using the cloud probability and Sentinel-2 image's cirrus band (B10).
+    cloud_displacement = image.select('B10').subtract(cloud_probability).abs()
+    shadow_mask = cloud_displacement.lt(CLOUD_DISPLACEMENT_THRESHOLD)  # Adjust the threshold as needed.
+
+    # Combine the cloud mask and shadow mask.
+    final_mask = cloud_mask.And(shadow_mask)
+
+    # Apply the mask to the image.
+    masked_image = image.updateMask(final_mask)
+
+    return masked_image
+
+
+
+def normalize_sentinel2(image):
+    """
+    Define a function to normalize Sentinel-2 data.
+    """
+    # Normalize the reflectance values to the range [0, 1].
+    normalized_image = image.divide(10000)
+
+    return normalized_image
 
 
 def mask_clouds(image):
@@ -308,6 +426,15 @@ def calculate_ndvi(image):
     """Calculate NDVI for an image."""
     ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
     return image.addBands(ndvi)
+
+def calculate_ndwi(image):
+    """Calculate NDWI for an image"""
+    nir_band = 'B8'  # Near-Infrared (NIR) band
+    swir_band = 'B11'  # Shortwave Infrared (SWIR) band
+    ndwi = image.normalizedDifference([nir_band, swir_band]).rename('NDWI')
+    return image.addBands(ndwi)
+
+
 
 def calculate_evi(image):
     """Calculate EVI for an image."""
