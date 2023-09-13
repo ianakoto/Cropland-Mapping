@@ -106,6 +106,50 @@ def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collecti
         .first()
     )
 
+def sample_cropland_points(scale=500, sample_size=1000):
+    """
+    Sample cropland points from a specified Earth Engine dataset for Iran, Sudan, and Afghanistan.
+
+    Args:
+        scale (int, optional): The scale at which to sample points. Defaults to 500.
+        sample_size (int, optional): The number of points to sample per region. Defaults to 1000.
+
+    Returns:
+        ee.FeatureCollection, ee.FeatureCollection: Sampled cropland points for Iran and Sudan, Sampled cropland points for Afghanistan.
+
+    """
+
+    # Load the specified dataset
+    dataset = ee.ImageCollection(DYNAMIC_WORD_ID) \
+        .filterDate(IRAN_START_DATE, IRAN_END_DATE) \
+        .filterBounds(iran_roi.union(sudan_roi)) \
+        .select(['crops'])  # Select the 'crops' band
+
+    # Function to sample points randomly
+    def sample_points(feature):
+        sampled_data = feature.randomSample(
+            region=feature.geometry(),
+            scale=scale,
+            numPixels=sample_size,
+            seed=123,  # Set a random seed for reproducibility
+            tileScale=1
+        )
+        return sampled_data
+
+    # Sample cropland points for Iran and Sudan
+    sampled_cropland_iran_sudan = dataset.map(sample_points)
+
+    # Sample cropland points for Afghanistan
+    dataset_afghanistan = ee.ImageCollection(DYNAMIC_WORD_ID) \
+        .filterDate(AFGHANISTAN_START_DATE, AFGHANISTAN_END_DATE) \
+        .filterBounds(afghanistan_roi) \
+        .select(['crops'])  # Select the 'crops' band
+
+    sampled_cropland_afghanistan = dataset_afghanistan.map(sample_points)
+
+    return sampled_cropland_iran_sudan.flatten(), sampled_cropland_afghanistan.flatten()
+
+
 
 def get_collections():
     """
