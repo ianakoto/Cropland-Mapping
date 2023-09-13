@@ -122,12 +122,13 @@ def sample_cropland_points(scale=500, sample_size=1000):
     # Load the specified dataset
     dataset = ee.ImageCollection(DYNAMIC_WORD_ID) \
         .filterDate(IRAN_START_DATE, IRAN_END_DATE) \
-        .filterBounds(iran_roi.union(sudan_roi)) \
+        .filterBounds(iran_geometry.union(sudan_geometry)) \
         .select(['crops'])  # Select the 'crops' band
 
     # Function to sample points randomly
     def sample_points(feature):
-        sampled_data = feature.stratifiedSample(
+        crops_integer = feature.select('crops').toInt()
+        sampled_data = crops_integer.stratifiedSample(
             classBand='crops',  # Specify the band used for stratification
             scale=scale,
             numPoints=sample_size,
@@ -142,7 +143,7 @@ def sample_cropland_points(scale=500, sample_size=1000):
     # Sample cropland points for Afghanistan
     dataset_afghanistan = ee.ImageCollection(DYNAMIC_WORD_ID) \
         .filterDate(AFGHANISTAN_START_DATE, AFGHANISTAN_END_DATE) \
-        .filterBounds(afghanistan_roi) \
+        .filterBounds(afghanistan_geometry) \
         .select(['crops'])  # Select the 'crops' band
 
     sampled_cropland_afghanistan = dataset_afghanistan.map(sample_points)
