@@ -17,22 +17,12 @@ sudan_geometry = sudan_roi.geometry()
 afghanistan_geometry = afghanistan_nangarhar_roi.geometry()
 
 
-def get_prediction_data(
-    lon, lat, iran_collection, sudan_collection, afghanistan_collection
-):
+def get_prediction_data(lon, lat):
     """Extracts Sentinel image as json at specific lat/lon and timestamp."""
 
     location = ee.Feature(ee.Geometry.Point([lon, lat]))
 
-    selected_collection = select_collection_by_point(
-        location,
-        iran_geometry,
-        sudan_geometry,
-        afghanistan_geometry,
-        iran_collection,
-        sudan_collection,
-        afghanistan_collection,
-    )
+    selected_collection = select_collection_by_point(location)
 
     image = selected_collection.mosaic()
 
@@ -43,7 +33,7 @@ def get_prediction_data(
     return feature.getInfo()["features"][0]["properties"]
 
 
-def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collection):
+def labeled_feature(row):
     """
     Extract labeled features from satellite imagery at a specific point.
 
@@ -56,34 +46,13 @@ def labeled_feature(row, iran_collection, sudan_collection, afghanistan_collecti
     - row (pd.Series or dict): A row or dictionary containing 'Lat', 'Lon', and 'Target' fields,
       where 'Lat' and 'Lon' are the latitude and longitude coordinates of the point, and 'Target'
       is the label associated with the point.
-    - iran_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Iran.
-    - sudan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Sudan.
-    - afghanistan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Afghanistan.
 
     Returns:
     - labeled_feature (ee.Feature): A feature representing the labeled feature extracted from the satellite imagery.
-
-    Note:
-    - To use this function, you must have access to the 'select_collection_by_point' function,
-      'iran_geometry', 'sudan_geometry', 'afghanistan_geometry', 'PATCH_SIZE', and 'SCALE'
-      defined elsewhere in your code.
-
-    Example:
-    row = {'Lat': 35.1234, 'Lon': 51.5678, 'Target': 'urban'}
-    labeled_feature = labeled_feature(row, iran_collection, sudan_collection, afghanistan_collection)
-    # Now you can work with the labeled feature for further analysis or modeling.
     """
     select_point = ee.Geometry.Point([row.Lon, row.Lat])
 
-    selected_collection = select_collection_by_point(
-        select_point,
-        iran_geometry,
-        sudan_geometry,
-        afghanistan_geometry,
-        iran_collection,
-        sudan_collection,
-        afghanistan_collection,
-    )
+    selected_collection = select_collection_by_point(select_point)
 
     image = selected_collection.mosaic()
     point = ee.Feature(
@@ -116,11 +85,11 @@ def sample_cropland_points(scale=500, sample_size=1000):
     )
 
     iran_sampled = export_cropland_samples(
-        iran_sudan_dataset, 12, iran_geometry, 1000, 500
+        iran_sudan_dataset, 12, iran_geometry, sample_size, scale
     )
 
     sudan_sampled = export_cropland_samples(
-        iran_sudan_dataset, 12, sudan_geometry, 1000, 500
+        iran_sudan_dataset, 12, sudan_geometry, sample_size, scale
     )
 
     afghan_dataset = get_training_dataset(
@@ -128,7 +97,7 @@ def sample_cropland_points(scale=500, sample_size=1000):
     )
 
     afghan_sampled = export_cropland_samples(
-        afghan_dataset, 4, afghanistan_geometry, 500, 500
+        afghan_dataset, 4, afghanistan_geometry, 500, scale
     )
 
     return iran_sampled, sudan_sampled, afghan_sampled
@@ -257,30 +226,19 @@ def get_collections():
     return iran_collection, sudan_collection, afghanistan_collection
 
 
-def select_collection_by_point(
-    point,
-    iran_geometry,
-    sudan_geometry,
-    afghanistan_geometry,
-    iran_collection,
-    sudan_collection,
-    afghanistan_collection,
-):
+def select_collection_by_point(point):
     """
     Selects an image collection based on whether a given point is within the bounds of a geometry.
 
     Args:
         point (ee.Geometry.Point): The point to check.
-        iran_geometry (ee.Geometry): The geometry representing the bounds of Iran.
-        sudan_geometry (ee.Geometry): The geometry representing the bounds of Sudan.
-        afghanistan_geometry (ee.Geometry): The geometry representing the bounds of Afghanistan.
-        iran_collection (ee.ImageCollection): The Sentinel-2 image collection for Iran.
-        sudan_collection (ee.ImageCollection): The Sentinel-2 image collection for Sudan.
-        afghanistan_collection (ee.ImageCollection): The Sentinel-2 image collection for Afghanistan.
 
     Returns:
         ee.ImageCollection or None: The selected image collection or None if the point is not within any geometry.
     """
+    # get the collections
+    iran_collection, sudan_collection, afghanistan_collection = get_collections()
+
     # Check if the point is within the bounds of the geometries
     is_in_iran = iran_geometry.contains(point)
     is_in_sudan = sudan_geometry.contains(point)
