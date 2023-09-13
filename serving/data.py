@@ -116,11 +116,11 @@ def sample_cropland_points(scale=500, sample_size=1000):
     )
 
     iran_sampled = export_cropland_samples(
-        iran_sudan_dataset, iran_geometry, 12, 1000, 500
+        iran_sudan_dataset, 12, iran_geometry, 1000, 500
     )
 
     sudan_sampled = export_cropland_samples(
-        iran_sudan_dataset, sudan_geometry, 12, 1000, 500
+        iran_sudan_dataset, 12, sudan_geometry, 1000, 500
     )
 
     afghan_dataset = get_training_dataset(
@@ -128,7 +128,7 @@ def sample_cropland_points(scale=500, sample_size=1000):
     )
 
     afghan_sampled = export_cropland_samples(
-        afghan_dataset, afghanistan_geometry, 4, 500, 500
+        afghan_dataset, 4, afghanistan_geometry, 500, 500
     )
 
     return iran_sampled, sudan_sampled, afghan_sampled
