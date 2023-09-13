@@ -124,7 +124,7 @@ def sample_cropland_points(scale=500, sample_size=1000):
     )
 
     afghan_dataset = get_training_dataset(
-        DYNAMIC_WORLD_ID, AFGHANISTAN_START_DATE, AFGHANISTAN_END_DATE, "crop"
+        DYNAMIC_WORLD_ID, AFGHANISTAN_START_DATE, AFGHANISTAN_END_DATE, "crops"
     )
 
     afghan_sampled = export_cropland_samples(
