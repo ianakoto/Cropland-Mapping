@@ -175,8 +175,16 @@ def export_cropland_samples(image_collection, class_label, region, sample_size, 
 
     # Create an ID property for each feature
     def add_id(feature):
+        # Generate a unique long ID using the current time in milliseconds
         unique_id = int(time.time() * 1000)
-        return feature.set("ID", ee.String("ID_").cat(ee.String(str(unique_id))))
+
+        # Convert the unique ID to a hexadecimal string and pad with zeros
+        hex_id = format(unique_id, "012x")
+
+        # Concatenate the prefix "ID_" with the hexadecimal ID
+        formatted_id = f"ID_{hex_id}"
+
+        return feature.set("ID", formatted_id)
 
     samples_with_id = cropland_samples.map(add_id)
 

@@ -1,5 +1,6 @@
 import time
 
+
 def monitor_ee_tasks(task_list, check_interval=60):
     """
     Monitors a list of Earth Engine tasks until all tasks are completed or failed.
@@ -27,7 +28,9 @@ def monitor_ee_tasks(task_list, check_interval=60):
         if task.status()["state"] == "COMPLETED":
             print()
             print(f"Task {i + 1} completed successfully!\n")
-            print(f"File Description: {task.status()['description']}\n")
-            print(f"Destination url: { task.status()['destination_uris']}\n")
+            task_status = task.status()
+            if "description" in task_status or "destination_uris" in task_status:
+                print(f"File Description: {task_status['description']}\n")
+                print(f"Destination url: {task_status['destination_uris']}\n")
         else:
             print(f"Task {i + 1} failed or was canceled.")
