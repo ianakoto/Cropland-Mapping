@@ -4,17 +4,17 @@ import numpy as np
 from config import *
 
 
-countries = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017")
+countries = ee.FeatureCollection("FAO/GAUL/2015/level2")
 
 # Filter countries by name to obtain the ROIs for Iran, Sudan, and Afghanistan
-iran_roi = countries.filter(ee.Filter.eq("country_na", "Iran"))
-sudan_roi = countries.filter(ee.Filter.eq("country_na", "Sudan"))
-afghanistan_roi = countries.filter(ee.Filter.eq("country_na", "Afghanistan"))
+iran_roi = countries.filter(ee.Filter.eq("ADM0_NAME", "Iran  (Islamic Republic of)"))
+sudan_roi = countries.filter(ee.Filter.eq("ADM0_NAME", "Sudan"))
+afghanistan_nangarhar_roi = countries.filter(ee.Filter.eq("ADM1_NAME", "Nangarhar"))
 
 # Get the geometries of the ROIs
 iran_geometry = iran_roi.geometry()
 sudan_geometry = sudan_roi.geometry()
-afghanistan_geometry = afghanistan_roi.geometry()
+afghanistan_geometry = afghanistan_nangarhar_roi.geometry()
 
 
 def get_prediction_data(
