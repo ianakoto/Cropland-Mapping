@@ -127,12 +127,12 @@ def sample_cropland_points(scale=500, sample_size=1000):
 
     # Function to sample points randomly
     def sample_points(feature):
-        sampled_data = feature.randomSample(
-            region=feature.geometry(),
+        sampled_data = feature.stratifiedSample(
+            classBand='crops',  # Specify the band used for stratification
             scale=scale,
-            numPixels=sample_size,
+            numPoints=sample_size,
             seed=123,  # Set a random seed for reproducibility
-            tileScale=1
+            region=feature.geometry()
         )
         return sampled_data
 
