@@ -78,7 +78,7 @@ def labeled_feature(id, lat, long, target):
     Returns:
     - labeled_feature (ee.Feature): A feature representing the labeled feature extracted from the satellite imagery.
     """
-    select_point = ee.Geometry.Point([long, lat])
+    select_point = ee.Geometry.Point([lat, long])
 
     selected_collection = select_collection_by_point(select_point)
 
