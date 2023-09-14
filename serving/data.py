@@ -309,7 +309,7 @@ def create_composited_sentinel2_collection(
         )
 
         # Apply the cloud & shadow mask function to the image collection
-        collection = collection.map(mask_clouds_and_shadows)
+        collection = collection.map(mask_clouds)
 
         # Calculate NDVI and EVI if requested
         if include_ndvi:
@@ -333,25 +333,6 @@ def create_composited_sentinel2_collection(
 
     return composited_collection
 
-
-def mask_clouds_and_shadows(image):
-    """
-    Define a function to mask clouds and their shadows.
-    """
-    qa = image.select('QA60')
-
-    # Bits 10 and 11 are clouds and cirrus, respectively.
-    cloudBitMask = 1 << 10
-    cirrusBitMask = 1 << 11
-
-    # Both flags should be set to zero, indicating clear conditions.
-    mask = qa.bitwiseAnd(cloudBitMask).eq(0) \
-        .And(qa.bitwiseAnd(cirrusBitMask).eq(0))
-
-    return image.updateMask(mask).divide(10000)
-
-
-
 def mask_clouds(image):
     """
     Create a function to mask clouds using the Sentinel-2 QA60 band
@@ -359,7 +340,7 @@ def mask_clouds(image):
 
     QA60 = image.select(["QA60"])
     cloud_mask = QA60.bitwiseAnd(1 << 10).eq(0).And(QA60.bitwiseAnd(1 << 11).eq(0))
-    return image.updateMask(cloud_mask)
+    return image.updateMask(cloud_mask).divide(10000)
 
 
 def calculate_ndvi(image):
