@@ -319,7 +319,8 @@ def create_composited_sentinel2_collection(
         if include_evi:
             collection = collection.map(calculate_evi)
 
-        collection = collection.select([BANDS] + [FEATURES])
+        band_selector =BANDS + FEATURES
+        collection = collection.select(band_selector)
 
         median_image = collection.median()
 
