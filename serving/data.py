@@ -320,8 +320,7 @@ def create_composited_sentinel2_collection(
             collection = collection.map(calculate_evi)
 
         collection = collection.select([BANDS] + [FEATURES])
-        # Create a median composite of the image collection
-        collection = collection.map(normalize_sentinel2)
+
         median_image = collection.median()
 
         # Add the composite to the ImageCollection
@@ -351,15 +350,6 @@ def mask_clouds_and_shadows(image):
 
     return image.updateMask(mask).divide(10000)
 
-
-def normalize_sentinel2(image):
-    """
-    Define a function to normalize Sentinel-2 data.
-    """
-    # Normalize the reflectance values to the range [0, 1].
-    normalized_image = image.divide(10000)
-
-    return normalized_image
 
 
 def mask_clouds(image):
