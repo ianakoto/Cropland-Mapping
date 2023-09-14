@@ -305,6 +305,7 @@ def create_composited_sentinel2_collection(
             ee.ImageCollection(IMAGE_COLLECTION)
             .filterBounds(roi)
             .filterDate(interval_start_date_str, interval_end_date_str)
+            .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',CLOUD_PIXEL_PERCENTAGE))
         )
 
         # Apply the cloud & shadow mask function to the image collection
@@ -337,33 +338,18 @@ def create_composited_sentinel2_collection(
 def mask_clouds_and_shadows(image):
     """
     Define a function to mask clouds and their shadows.
-    Load the Sentinel-2 Cloud Probability (S2C) product.
     """
-    s2c = (
-        ee.ImageCollection(SENTINEL_CLOUD_PROB_ID)
-        .filterBounds(image.geometry())
-        .filterDate(image.date())
-    )
+    qa = image.select('QA60')
 
-    # Select the cloud probability band.
-    cloud_probability = s2c.first().select("probability")
+    # Bits 10 and 11 are clouds and cirrus, respectively.
+    cloudBitMask = 1 << 10
+    cirrusBitMask = 1 << 11
 
-    # Create a cloud mask by thresholding the cloud probability.
-    cloud_mask = cloud_probability.lt(CLOUD_THRESHOLD)
+    # Both flags should be set to zero, indicating clear conditions.
+    mask = qa.bitwiseAnd(cloudBitMask).eq(0) \
+        .And(qa.bitwiseAnd(cirrusBitMask).eq(0))
 
-    # Create a shadow mask using the cloud probability and Sentinel-2 image's cirrus band (B10).
-    cloud_displacement = image.select("B10").subtract(cloud_probability).abs()
-    shadow_mask = cloud_displacement.lt(
-        CLOUD_DISPLACEMENT_THRESHOLD
-    )  # Adjust the threshold as needed.
-
-    # Combine the cloud mask and shadow mask.
-    final_mask = cloud_mask.And(shadow_mask)
-
-    # Apply the mask to the image.
-    masked_image = image.updateMask(final_mask)
-
-    return masked_image
+    return image.updateMask(mask).divide(10000)
 
 
 def normalize_sentinel2(image):
