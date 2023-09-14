@@ -78,14 +78,14 @@ def labeled_feature(row):
     Returns:
     - labeled_feature (ee.Feature): A feature representing the labeled feature extracted from the satellite imagery.
     """
-    select_point = ee.Geometry.Point([row.Lon, row.Lat])
+    select_point = ee.Geometry.Point([row["Lon"], row["Lat"]])
 
     selected_collection = select_collection_by_point(select_point)
 
     image = selected_collection.mosaic()
     point = ee.Feature(
         select_point,
-        {LABEL: row.Target},
+        {LABEL: row["Target"]},
     )
     return (
         image.neighborhoodToArray(ee.Kernel.square(PATCH_SIZE))
