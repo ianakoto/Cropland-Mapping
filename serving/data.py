@@ -61,7 +61,7 @@ def get_prediction_data(lon, lat):
     return feature.getInfo()["features"][0]["properties"]
 
 
-def labeled_feature(row):
+def labeled_feature(id, lat, long, target):
     """
     Extract labeled features from satellite imagery at a specific point.
 
@@ -78,14 +78,14 @@ def labeled_feature(row):
     Returns:
     - labeled_feature (ee.Feature): A feature representing the labeled feature extracted from the satellite imagery.
     """
-    select_point = ee.Geometry.Point([row["Lon"], row["Lat"]])
+    select_point = ee.Geometry.Point([long, lat])
 
     selected_collection = select_collection_by_point(select_point)
 
     image = selected_collection.mosaic()
     point = ee.Feature(
         select_point,
-        {LABEL: row["Target"]},
+        {LABEL: target},
     )
     return (
         image.neighborhoodToArray(ee.Kernel.square(PATCH_SIZE))
