@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import ee
-from config import *
+from .config import *
 import time
 
 

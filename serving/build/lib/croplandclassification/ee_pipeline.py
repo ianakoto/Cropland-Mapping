@@ -17,7 +17,7 @@ from IPython.display import Image
 import tensorflow as tf
 from tensorflow import keras
 
-from config import *
+from .config import *
 
 
 def run(
@@ -42,7 +42,7 @@ def run(
     import google.auth
     import logging
     import requests
-    from data import *
+    from .data import *
     import numpy as np
     from numpy.lib.recfunctions import structured_to_unstructured
     from typing import List
@@ -69,7 +69,7 @@ def run(
 
     def create_features_dict() -> dict:
         """Creates dict of features."""
-        from config import *
+        from .config import *
 
         train_features = FEATURES + BANDS
         features_dict = {
@@ -80,7 +80,7 @@ def run(
         return features_dict
 
     def serialize(patch: List[np.ndarray]):
-        from config import *
+        from .config import *
 
         train_features = FEATURES + BANDS
         feature = create_features_dict()
@@ -138,7 +138,7 @@ def run(
             The requested patch of pixels as a structured
             NumPy array with shape (width, height).
         """
-        from config import *
+        from .config import *
 
         bands = BANDS + FEATURES + LABEL
 
@@ -162,8 +162,8 @@ def run(
         return np.load(io.BytesIO(response.content), allow_pickle=True)
 
     def get_training_example(long, lat, target):
-        from data import labeled_feature
-        from config import *
+        from .data import labeled_feature
+        from .config import *
         import ee
 
         select_point = ee.Geometry.Point([long, lat]).buffer(PATCH_SIZE)
@@ -175,8 +175,6 @@ def run(
 
     def try_get_example(long, lat, target) -> Iterator[tuple]:
         """Wrapper over `get_training_examples` that allows it to simply log errors instead of crashing."""
-        from data import labeled_feature
-
         try:
             yield get_training_example(long, lat, target)
         except (requests.exceptions.HTTPError, ee.ee_exception.EEException) as e:
