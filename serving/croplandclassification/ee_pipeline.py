@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import List
+
+from collections.abc import Iterator
+from typing import List, Optional
+
 from google.api_core import exceptions, retry
 import google.auth
 
@@ -45,7 +51,7 @@ def run(
     from .data import *
     import numpy as np
     from numpy.lib.recfunctions import structured_to_unstructured
-    from typing import List
+
 
     import tensorflow as tf
 
