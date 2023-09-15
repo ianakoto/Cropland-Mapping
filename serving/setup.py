@@ -10,7 +10,7 @@ setup(
     install_requires=[
     "earthengine-api==0.1.336",
     "tensorflow==2.9.0",
-    "sklearn==0.24.2",
+    "sklearn==1.2.2",
     "google-api-core==2.0.1",
     "google-auth==2.0.2",
     "apache-beam[gcp]==2.36.0",
