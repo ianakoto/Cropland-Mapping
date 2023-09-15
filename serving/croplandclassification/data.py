@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import ee
-import numpy as np
 from config import *
 import time
+
+
 
 from sklearn.model_selection import train_test_split
 from google.api_core import exceptions, retry
 import google.auth
+
+
 
 
 
@@ -61,7 +64,7 @@ def get_prediction_data(lon, lat):
     return feature.getInfo()["features"][0]["properties"]
 
 
-def labeled_feature(id, long, lat, target):
+def labeled_feature(long, lat, target):
     """
     Extract labeled features from satellite imagery at a specific point.
 
@@ -92,6 +95,7 @@ def labeled_feature(id, long, lat, target):
         .sampleRegions(ee.FeatureCollection([point]), scale=SCALE)
         .first()
     )
+
 
 
 def sample_cropland_points(scale=500, sample_size=1000):

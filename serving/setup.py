@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cropland_classification',
+    name='croplandclassification',
     author='Ian Akoto',
     author_email='iancecilakoto@gmail.com',
     description='A package for pulling data from earth engine to gcp for cropland classification',

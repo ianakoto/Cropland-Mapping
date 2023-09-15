@@ -7,6 +7,7 @@ CLOUD_PIXEL_PERCENTAGE = 20  # Define a cloud pixel threshold (e.g., 20%).
 CLOUD_DISPLACEMENT_THRESHOLD = 0.2
 BANDS = ["B2", "B3", "B4", "B8"]
 FEATURES = ["NDVI", "NDWI", "EVI"]
+
 SCALE = 10
 PATCH_SIZE = 16
 BATCH_SIZE = 64
@@ -14,8 +15,9 @@ BATCH_SIZE = 64
 MAX_REQUESTS = 4  # default EE request quota
 MIN_BATCH_SIZE = 100
 
-POINT_PATCH_SIZE = 128  # Pixels
+POINT_PATCH_SIZE = 33  # Pixels
 
+MAX_REQUESTS = 4  # default EE request quota
 
 # For this Project we focus on 3 areas.
 # Change this part if you want to to focus on a different area.
