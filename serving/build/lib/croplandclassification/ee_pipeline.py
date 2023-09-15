@@ -16,6 +16,7 @@ import requests
 
 import sys
 import os
+import io
 
 # Import the Image function from the IPython.display module.
 from IPython.display import Image
@@ -48,10 +49,9 @@ def run(
     import google.auth
     import logging
     import requests
-    from .data import *
     import numpy as np
     from numpy.lib.recfunctions import structured_to_unstructured
-
+    import io
 
     import tensorflow as tf
 
@@ -75,7 +75,7 @@ def run(
 
     def create_features_dict() -> dict:
         """Creates dict of features."""
-        from .config import *
+        from .config import LABEL, FEATURES, BANDS
 
         train_features = FEATURES + BANDS
         features_dict = {
@@ -86,7 +86,7 @@ def run(
         return features_dict
 
     def serialize(patch: List[np.ndarray]):
-        from .config import *
+        from .config import LABEL, FEATURES, BANDS
 
         train_features = FEATURES + BANDS
         feature = create_features_dict()
@@ -144,7 +144,7 @@ def run(
             The requested patch of pixels as a structured
             NumPy array with shape (width, height).
         """
-        from .config import *
+        from .config import LABEL, FEATURES, BANDS
 
         bands = BANDS + FEATURES + LABEL
 
@@ -169,7 +169,7 @@ def run(
 
     def get_training_example(long, lat, target):
         from .data import labeled_feature
-        from .config import *
+        from .config import PATCH_SIZE
         import ee
 
         select_point = ee.Geometry.Point([long, lat]).buffer(PATCH_SIZE)
@@ -246,7 +246,7 @@ def run(
 def main() -> None:
     import argparse
     import logging
-    from config import *
+    from .config import MAX_REQUESTS
 
     logging.getLogger().setLevel(logging.INFO)
 
