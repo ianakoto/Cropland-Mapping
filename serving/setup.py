@@ -8,12 +8,12 @@ setup(
     packages=find_packages(),
     version='0.0.1',
     install_requires=[
-    "earthengine-api==0.1.336",
-    "tensorflow==2.9.0",
+    "earthengine-api==0.1.369",
+    "tensorflow==2.13.0",
     "sklearn==1.2.2",
-    "google-api-core==2.0.1",
-    "google-auth==2.0.2",
-    "apache-beam[gcp]==2.36.0",
+    "google-api-core==2.17.3",
+    "google-auth==2.17.3",
+    "apache-beam[gcp]==2.50.0",
     "IPython"
     ],
 )
