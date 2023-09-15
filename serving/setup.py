@@ -11,8 +11,8 @@ setup(
     "earthengine-api==0.1.369",
     "tensorflow==2.13.0",
     "scikit-learn==1.3.0",
-    "google-api-core==2.17.3",
-    "google-auth==2.17.3",
+    "google-api-core==2.11.1",
+    "google-auth==2.11.1",
     "apache-beam[gcp]==2.50.0",
     "IPython"
     ],
