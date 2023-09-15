@@ -1,6 +1,7 @@
 pyproject.toml
 setup.py
 croplandclassification/__init__.py
+croplandclassification/beam_func.py
 croplandclassification/config.py
 croplandclassification/data.py
 croplandclassification/ee_pipeline.py
