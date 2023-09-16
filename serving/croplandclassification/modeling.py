@@ -32,7 +32,7 @@ from __future__ import annotations
 import argparse
 
 import tensorflow as tf
-from config import *
+from .config import *
 
 
 
@@ -55,8 +55,9 @@ def parse_tfrecord(example_proto: bytes, features_dict: dict) -> dict:
 def create_features_dict() -> dict:
     """Creates dict of features."""
 
+    train_features = BANDS + FEATURES
     features_dict = {
-        name: tf.io.FixedLenFeature(shape=[33, 33], dtype=tf.float32) for name in BANDS
+        name: tf.io.FixedLenFeature(shape=[33, 33], dtype=tf.float32) for name in train_features
     }
 
     features_dict[LABEL] = tf.io.FixedLenFeature(shape=[1, 1], dtype=tf.float32)
@@ -68,9 +69,9 @@ def get_feature_and_label_vectors(
     inputs: dict, features_dict: dict
 ) -> tuple[tf.Tensor, int]:
     """Formats data."""
-
+    train_features = BANDS + FEATURES
     label_value = tf.cast(inputs.pop(LABEL), tf.int32)
-    features_vec = [inputs[name] for name in BANDS]
+    features_vec = [inputs[name] for name in train_features]
     # (bands, x, y) -> (x, y, bands)
     features_vec = tf.transpose(features_vec, [1, 2, 0])
     return features_vec, label_value
@@ -79,8 +80,8 @@ def get_feature_and_label_vectors(
 def create_datasets(bucket: str) -> tuple[tf.data.Dataset, tf.data.Dataset]:
     """Creates training and validation datasets."""
 
-    train_data_dir = f"gs://{bucket}/geospatial_training.tfrecord.gz"
-    eval_data_dir = f"gs://{bucket}/geospatial_validation.tfrecord.gz"
+    train_data_dir = f"gs://{bucket}/croplandclassification/train/geospatial_training.tfrecord.gz"
+    eval_data_dir = f"gs://{bucket}/croplandclassification/train/geospatial_validation.tfrecord.gz"
     features_dict = create_features_dict()
 
     training_dataset = (
