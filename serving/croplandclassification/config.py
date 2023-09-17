@@ -9,7 +9,7 @@ BANDS = ["B2", "B3", "B4", "B8"]
 FEATURES = ["NDVI", "NDWI", "EVI"]
 
 SCALE = 10
-PATCH_SIZE = 16
+PATCH_SIZE = 5
 BATCH_SIZE = 64
 # Default values.
 MAX_REQUESTS = 4  # default EE request quota
