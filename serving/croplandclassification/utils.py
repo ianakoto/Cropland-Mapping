@@ -3,6 +3,7 @@ import math
 from tqdm import tqdm
 import tensorflow as tf
 from .config import *
+from .data import labeled_feature
 
 def extract_features(row):
     target_features  = BANDS + FEATURES + [LABEL]
