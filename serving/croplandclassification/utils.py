@@ -2,9 +2,10 @@ import time
 import math
 from tqdm import tqdm
 import tensorflow as tf
+from .config import *
 
 def extract_features(row):
-    target_features  = BANDS + [LABEL]
+    target_features  = BANDS + FEATURES + [LABEL]
     feature_values =  labeled_feature(row.Lon, row.Lat, row.Target)
     # Create a dictionary to store each band as a feature
     feature_dict = {band: np.array(feature_values.get(band).getInfo()) for band in target_features}
@@ -16,7 +17,7 @@ def extract_features(row):
 def dict_to_tf_example(feature_dict):
     # Convert each feature to a TensorFlow Feature
     features = {}
-    for band in BANDS:
+    for band in (BANDS + FEATURES):
         features[band] = tf.train.Feature(float_list=tf.train.FloatList(value=feature_dict[band].flatten()))
 
     # Label feature
