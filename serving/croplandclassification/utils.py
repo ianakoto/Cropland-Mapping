@@ -2,6 +2,7 @@ import time
 import math
 from tqdm import tqdm
 import tensorflow as tf
+import numpy as np
 from .config import *
 from .data import labeled_feature
 

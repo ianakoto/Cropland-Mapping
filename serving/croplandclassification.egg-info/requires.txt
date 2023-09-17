@@ -1,5 +1,6 @@
 earthengine-api
 tensorflow
+numpy
 scikit-learn
 google-api-core
 google-auth

@@ -10,6 +10,7 @@ setup(
     install_requires=[
     "earthengine-api",
     "tensorflow",
+    "numpy",
     "scikit-learn",
     "google-api-core",
     "google-auth",
