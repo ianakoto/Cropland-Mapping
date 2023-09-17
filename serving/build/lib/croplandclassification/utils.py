@@ -44,7 +44,7 @@ def process_rows(row, output_path):
 def create_tfrecord(dataframe, output):
     total_rows = len(dataframe)
     for index, row in tqdm(dataframe.iterrows(), total=total_rows):
-      process_rows(row, bucket, output)
+      process_rows(row, output)
 
 
 def monitor_ee_tasks(task_list, check_interval=60):
