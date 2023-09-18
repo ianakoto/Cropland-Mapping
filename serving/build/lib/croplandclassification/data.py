@@ -173,6 +173,43 @@ def get_training_dataset(id, start_date, end_date, band_name):
     return dataset
 
 
+def get_regions_collections():
+    """
+    Retrieve uncomposited Sentinel-2 image collections for specific regions and time frame.
+
+    This function retrieves composited Sentinel-2 image collections for three different regions:
+    Iran, Sudan, and Afghanistan, for a specified time period between 'start_date' and 'end_date'.
+
+    Returns:
+    - iran_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Iran.
+    - sudan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Sudan.
+    - afghanistan_collection (Sentinel2ImageCollection): A composited Sentinel-2 image collection for Afghanistan.
+
+    Note:
+    - To use this function, you must have access to the 'create_composited_sentinel2_collection'
+      function and the geometries (iran_geometry, sudan_geometry, and afghanistan_geometry)
+      defined elsewhere in your code.
+
+    Example:
+    start_date = "2023-01-01"
+    end_date = "2023-12-31"
+    iran_collection, sudan_collection, afghanistan_collection = get_collections(start_date, end_date)
+
+    """
+    iran_collection = create_sentinel2_collection(
+        iran_geometry, IRAN_START_DATE, IRAN_END_DATE
+    )
+    sudan_collection = create_sentinel2_collection(
+        sudan_geometry, SUDAN_START_DATE, SUDAN_END_DATE
+    )
+    afghanistan_collection = create_sentinel2_collection(
+        afghanistan_geometry, AFGHANISTAN_START_DATE, AFGHANISTAN_END_DATE
+    )
+    return iran_collection, sudan_collection, afghanistan_collection
+
+    
+
+
 def get_collections():
     """
     Retrieve composited Sentinel-2 image collections for specific regions and time frame.
@@ -237,6 +274,60 @@ def select_collection_by_point(point):
         selected_collection = None  # Point is not within any of the geometries
 
     return selected_collection
+
+
+
+def create_sentinel2_collection(
+    roi,
+    start_date_str,
+    end_date_str,
+    interval=15,
+    limit=10,
+    include_ndvi=True,
+    include_ndwi=True,
+    include_evi=True,
+):
+    """
+    Creates a Sentinel-2 image collection within the specified ROI and time range.
+
+    Args:
+        roi (ee.Geometry): The region of interest as an Earth Engine geometry.
+        start_date_str (str): The start date in 'yyyy-mm-dd' format.
+        end_date_str (str): The end date in 'yyyy-mm-dd' format.
+        interval (int, optional): The number of days for each composite interval. Default is 15.
+        limit (int, optional): The maximum number of images to include in each composite. Default is 10.
+        include_ndvi (bool, optional): Whether to calculate and include NDVI bands. Default is True.
+        include_evi (bool, optional): Whether to calculate and include EVI bands. Default is True.
+
+    Returns:
+        ee.ImageCollection: The composited Sentinel-2 image collection.
+    """
+    # Filter Sentinel-2 data for the current date range
+    collection = (
+        ee.ImageCollection(IMAGE_COLLECTION)
+        .filterBounds(roi)
+        .filterDate(start_date_str, end_date_str)
+        .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',CLOUD_PIXEL_PERCENTAGE))
+    )
+
+    # Apply the cloud & shadow mask function to the image collection
+    collection = collection.map(mask_clouds)
+
+    # Calculate NDVI and EVI if requested
+    if include_ndvi:
+        collection = collection.map(calculate_ndvi)
+    if include_ndwi:
+        collection = collection.map(calculate_ndwi)
+    if include_evi:
+        collection = collection.map(calculate_evi)
+
+    band_selector =BANDS + FEATURES
+    collection = collection.select(band_selector)
+
+    return collection
+
+
+
 
 
 def create_composited_sentinel2_collection(
