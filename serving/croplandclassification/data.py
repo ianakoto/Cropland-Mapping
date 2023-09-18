@@ -48,56 +48,6 @@ sudan_geometry = sudan_roi.geometry()
 afghanistan_geometry = afghanistan_nangarhar_roi.geometry()
 
 
-def get_prediction_data(lon, lat):
-    """Extracts Sentinel image as json at specific lat/lon and timestamp."""
-
-    location = ee.Feature(ee.Geometry.Point([lon, lat]))
-
-    selected_collection = select_collection_by_point(location)
-
-    image = selected_collection.mosaic()
-
-    feature = image.neighborhoodToArray(ee.Kernel.square(PATCH_SIZE)).sampleRegions(
-        collection=ee.FeatureCollection([location]), scale=SCALE
-    )
-
-    return feature.getInfo()["features"][0]["properties"]
-
-
-def labeled_feature(long, lat, target):
-    """
-    Extract labeled features from satellite imagery at a specific point.
-
-    This function extracts labeled features from satellite imagery at a specific point
-    defined by latitude (Lat) and longitude (Lon) provided in the 'row' parameter. The
-    function selects the appropriate image collection (Iran, Sudan, or Afghanistan) based
-    on the point's location and then extracts features from the mosaic of that collection.
-
-    Parameters:
-    - row (pd.Series or dict): A row or dictionary containing 'Lat', 'Lon', and 'Target' fields,
-      where 'Lat' and 'Lon' are the latitude and longitude coordinates of the point, and 'Target'
-      is the label associated with the point.
-
-    Returns:
-    - labeled_feature (ee.Feature): A feature representing the labeled feature extracted from the satellite imagery.
-    """
-    select_point = ee.Geometry.Point([long, lat])
-
-    selected_collection = select_collection_by_point(select_point)
-
-    image = selected_collection.mosaic()
-    point = ee.Feature(
-        select_point,
-        {LABEL: target},
-    )
-    return (
-        image.neighborhoodToArray(ee.Kernel.square(PATCH_SIZE))
-        .sampleRegions(ee.FeatureCollection([point]), scale=SCALE)
-        .first()
-    )
-
-
-
 def sample_cropland_points(scale=500, sample_size=1000):
     """
     Sample cropland points from a specified Earth Engine dataset for Iran, Sudan, and Afghanistan.

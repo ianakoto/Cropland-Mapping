@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: croplandclassification
 Version: 0.0.1
-Summary: A package for pulling data from earth engine to gcp for cropland classification
+Summary: A package for pulling data from earth engine to gcp and supervised classification for cropland
 Author: Ian Akoto
 Author-email: iancecilakoto@gmail.com
