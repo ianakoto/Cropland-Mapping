@@ -3,11 +3,6 @@ name = "croplandclassification"
 version = "0.0.1"
 dependencies = [
     "earthengine-api",
-    "tensorflow",
     "numpy",
-    "scikit-learn",
-    "google-api-core",
-    "google-auth",
-    "apache-beam[gcp]",
     "IPython"
 ]
