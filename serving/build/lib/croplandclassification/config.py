@@ -9,6 +9,7 @@ FEATURES = ["NDVI", "NDWI", "EVI"]
 LABEL = "is_cropland"
 
 SCALE = 10
+PATCH_SIZE = 16
 # For this Project we focus on 3 areas.
 # Change this part if you want to to focus on a different area.
 # For Iran and Sudan, data can span from  july 2019 to 2022
